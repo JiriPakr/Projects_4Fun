@@ -1,5 +1,5 @@
-from locale import currency
-from tempfile import SpooledTemporaryFile
+#from locale import currency
+#from tempfile import SpooledTemporaryFile
 import pygame
 import math
 from queue import PriorityQueue
