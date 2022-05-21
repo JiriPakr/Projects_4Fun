@@ -1,15 +1,26 @@
-#from locale import currency
-#from tempfile import SpooledTemporaryFile
-import pygame
-import math
-from queue import PriorityQueue
+"""
+Visualization of path finding algorithms
+Algorithms implemented:
+A star - A*
+Depth-first search - DFS
 
+Mapped keys:
+A - switching algorithms
+C - clearing environment
+Space - starts algoritm
+Mouse1 - adds start(light blue), end(blue), barrier(black)
+Mouse2 - removes objects
+"""
+
+import pygame
+from queue import PriorityQueue
+from queue import LifoQueue
 
 #  VISUALIZATION -------------------------------------------
 ## DISPLAY
 WIDTH = 1000                                               # Window size
 WIN = pygame.display.set_mode((WIDTH,WIDTH))
-pygame.display.set_caption("A*")
+pygame.display.set_caption("Path finding visualization")
 
 ## COLORS
 RED = (255, 0, 0)
@@ -123,10 +134,11 @@ def Astar(draw, grid, start, end):
         current = open_set.get()[2]                                                 # get smallest f_score element
         open_set_hash.remove(current)                                               # and remove it
 
-        if current == end:                                                          # if at the end, found path -> finished
+        if current == end:
+            end.make_end()                                                          # if at the end, found path -> finished
             reconstruct_path(came_from, end, draw)
             start.make_start()
-            end.make_end()
+            print("[INFO] Path found in:",count,"steps")
             return True # make path
 
         for neighbor in current.neighbors:                                          # otherwise consider all neighbours of currnt node
@@ -150,7 +162,55 @@ def Astar(draw, grid, start, end):
     
     return False
 
+## DFS Algo ------------------------------------------------------------------------
+
+def dfs(draw, start, end):
+    count = 0
+    stack = LifoQueue()
+    stack.put(start)   
+    visited = [start]
+    came_from = {} 
+
+    stack_hash = {start}
+    while not stack.empty():
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+        current=stack.get()
+
+        if current == end:
+            end.make_end()
+            reconstruct_path(came_from, end, draw)
+            start.make_start()
+            ("[INFO] Path found in:",count,"steps")
+            return True
+
+        for neighbor in current.neighbors:   
+            if neighbor not in stack_hash and neighbor not in visited: 
+                came_from[neighbor] = current  
+                count += 1
+                stack.put(neighbor)
+                stack_hash.add(neighbor)
+                neighbor.make_open()
+                if neighbor == end:
+                    end.make_end()
+                    reconstruct_path(came_from, end, draw)
+                    start.make_start()
+                    print("[INFO] Path found in:",count,"steps")
+                    return True
+                
+        if current != start:
+            visited.append(current)
+            current.make_closed()
+
+        draw()
+    
+    return False
+
 ##------------------------------------------------------------------------------
+
 
 def reconstruct_path(came_from, current, draw):
     while current in came_from:
@@ -204,6 +264,7 @@ def get_click_pos(pos, rows, width):
 def main(win, width):
     ROWS = 50
     grid = make_grid(ROWS, width)
+    algo = 0
 
     start = None
     end = None
@@ -251,14 +312,29 @@ def main(win, width):
                     print("[INFO] Removing end on: X =",row,", Y =",col)
             
             if event.type == pygame.KEYDOWN:
+                
+                if event.key == pygame.K_a: 
+                    if algo == 0:
+                        algo = 1
+                        print("[INFO] Switching to Depth-first search")
+
+                    elif algo == 1:
+                        print("[INFO] Switching to A*")  
+                        algo = 0
+
                 if event.key == pygame.K_SPACE and start and end:    # if space pressed start algo
 
                     for row in grid:
                         for node in row:
                             node.update_neighbors(grid)
                             
-                    print("[INFO] Chosen A*")
-                    Astar(lambda: draw(win, grid, ROWS, width), grid, start, end)   #lambda - anonymous function (one-time use function)
+                    #
+                    if algo == 0:
+                        print("[INFO] Chosen A*")
+                        Astar(lambda: draw(win, grid, ROWS, width), grid, start, end)
+                    if algo == 1:
+                        print("[INFO] Chosen Depth-first search")  
+                        dfs(lambda: draw(win, grid, ROWS, width), start, end)     
 
                 if event.key == pygame.K_c:
                     print("[INFO] Clearing environment")
