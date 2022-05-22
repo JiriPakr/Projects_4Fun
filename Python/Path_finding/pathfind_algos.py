@@ -3,6 +3,7 @@ Visualization of path finding algorithms
 Algorithms implemented:
 A star - A*
 Depth-first search - DFS
+Breadth-first search - BFS
 
 Mapped keys:
 A - switching algorithms
@@ -15,6 +16,7 @@ Mouse2 - removes objects
 import pygame
 from queue import PriorityQueue
 from queue import LifoQueue
+from queue import Queue
 
 #  VISUALIZATION -------------------------------------------
 ## DISPLAY
@@ -106,19 +108,21 @@ class Node:
         if self.col > 0 and not grid[self.row][self.col - 1].is_barrier():    # LEFT
             self.neighbors.append(grid[self.row][self.col - 1])
 
+
 ## A* algo ---------------------------------------------------------------------
 
+
 def h_score(p1, p2):                                                               # Heuristic function - Manhattan distance
-    x1, y1 = p1                                                                      # p1 = (x1,y1)
+    x1, y1 = p1                                                                      
     x2, y2 = p2
     return abs(x1 - x2) + abs(y1 - y2)
 
 
 def Astar(draw, grid, start, end):
     count = 0
-    open_set = PriorityQueue()                                                     # Set to look thru (PriorQ - efficient to get smallest element from it)
-    open_set.put((0, count, start))                                                # Putting start to the set
-    came_from = {}                                                                 # Keeping track where it came from to find best path at the end
+    open_set = PriorityQueue()                                                     # OPEN list
+    open_set.put((0, count, start))                                                
+    came_from = {}                                                                 # Set for path reconstruction
     g_score = {node: float("inf") for row in grid for node in row}                 # Shortest path from start node to current node (init distance = inf)
     g_score[start] = 0
     f_score = {node: float("inf") for row in grid for node in row}                 
@@ -126,13 +130,13 @@ def Astar(draw, grid, start, end):
 
     open_set_hash = {start}
 
-    while not open_set.empty():                                                     # if set is empty -> quit
+    while not open_set.empty():                                                     
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
 
         current = open_set.get()[2]                                                 # get smallest f_score element
-        open_set_hash.remove(current)                                               # and remove it
+        open_set_hash.remove(current)                                              
 
         if current == end:
             end.make_end()                                                          # if at the end, found path -> finished
@@ -145,10 +149,10 @@ def Astar(draw, grid, start, end):
             temp_g_score = g_score[current] + 1                                     # and calc their temp g_score
 
             if temp_g_score < g_score[neighbor]:                                    # if their its less than g_score in a table
-                came_from[neighbor] = current                                       # update
+                came_from[neighbor] = current                                       
                 g_score[neighbor] = temp_g_score
                 f_score[neighbor] = temp_g_score + h_score(neighbor.get_pos(), end.get_pos())
-                if neighbor not in open_set_hash:                                   # and add to open set hash
+                if neighbor not in open_set_hash:                                   
                     count += 1
                     open_set.put((f_score[neighbor], count, neighbor))
                     open_set_hash.add(neighbor)
@@ -162,18 +166,20 @@ def Astar(draw, grid, start, end):
     
     return False
 
+
 ## DFS Algo ------------------------------------------------------------------------
+
 
 def dfs(draw, start, end):
     count = 0
-    stack = LifoQueue()
-    stack.put(start)   
-    visited = [start]
-    came_from = {} 
+    stack = LifoQueue()                                     # Stack ensures new nodes added to the start of the list -> dfs
+    stack.put(start)                                        # OPEN list
+    visited = [start]                                       # CLOSED list
+    came_from = {}                                          # set for path reconstruction
 
     stack_hash = {start}
-    while not stack.empty():
 
+    while not stack.empty():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -208,6 +214,56 @@ def dfs(draw, start, end):
         draw()
     
     return False
+
+
+## BFS Algo ------------------------------------------------------------------------
+
+
+def bfs(draw, start, end):
+    count = 0
+    queue = Queue()                     # Queue ensures new nodes added to the end of the list -> bfs
+    queue.put(start)                    # OPEN list
+    visited = [start]                   # CLOSED list
+    came_from = {} 
+
+    queue_hash = {start}
+    while not queue.empty():
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+        current=queue.get()
+
+        if current == end:
+            end.make_end()
+            reconstruct_path(came_from, end, draw)
+            start.make_start()
+            ("[INFO] Path found in:",count,"steps")
+            return True
+
+        for neighbor in current.neighbors:   
+            if neighbor not in queue_hash and neighbor not in visited: 
+                came_from[neighbor] = current  
+                count += 1
+                queue.put(neighbor)
+                queue_hash.add(neighbor)
+                neighbor.make_open()
+                if neighbor == end:
+                    end.make_end()
+                    reconstruct_path(came_from, end, draw)
+                    start.make_start()
+                    print("[INFO] Path found in:",count,"steps")
+                    return True
+                
+        if current != start:
+            visited.append(current)
+            current.make_closed()
+
+        draw()
+    
+    return False
+
 
 ##------------------------------------------------------------------------------
 
@@ -250,7 +306,6 @@ def draw(win, grid, rows, width):
     pygame.display.update()
 
 
-    pass
 def get_click_pos(pos, rows, width):
     gap = width // rows
     y, x = pos
@@ -319,8 +374,12 @@ def main(win, width):
                         print("[INFO] Switching to Depth-first search")
 
                     elif algo == 1:
+                        print("[INFO] Switching to Breadth-first search*")  
+                        algo = 2
+
+                    elif algo == 2:
                         print("[INFO] Switching to A*")  
-                        algo = 0
+                        algo = 0    
 
                 if event.key == pygame.K_SPACE and start and end:    # if space pressed start algo
 
@@ -332,9 +391,12 @@ def main(win, width):
                     if algo == 0:
                         print("[INFO] Chosen A*")
                         Astar(lambda: draw(win, grid, ROWS, width), grid, start, end)
-                    if algo == 1:
+                    elif algo == 1:
                         print("[INFO] Chosen Depth-first search")  
-                        dfs(lambda: draw(win, grid, ROWS, width), start, end)     
+                        dfs(lambda: draw(win, grid, ROWS, width), start, end)
+                    elif algo == 2:
+                        print("[INFO] Chosen Breadth-first search")  
+                        bfs(lambda: draw(win, grid, ROWS, width), start, end)       
 
                 if event.key == pygame.K_c:
                     print("[INFO] Clearing environment")
