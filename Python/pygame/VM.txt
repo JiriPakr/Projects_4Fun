@@ -1,0 +1,15 @@
+
+# VM creation command 
+# Terminal > mkdir name > cd name                       # name - your chosen name
+# Terminal > python - m venv name
+# View -> Command Palette (Crtl+Shift+P) -> Open workspace settings JSON
+# Terminal > cd > ls > Then copy path to envfolder/Scripts to JSON and add python to the end
+# settings.json > like this:
+#
+#   {
+#       "python.pythonPath": "C:\\Users\\jirip\\OneDrive\\Plocha\\Code\\Python\\pygame\\pygame_env\\Scripts\\python"
+#   }
+#
+# Then save settings and close
+# View -> Command Palette (Crtl+Shift+P) -> Python: Select Interpreter -> Choose created venv
+# Reset terminal
