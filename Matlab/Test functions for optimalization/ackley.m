@@ -1,3 +1,4 @@
+clear;clc;
 x = linspace(-5,5,100);
 y = x;
 z = zeros(length(x), length(y));
@@ -10,6 +11,10 @@ end
 
 s = surf(x,y,z);
 s.LineStyle = 'None';
+xlabel("X")
+ylabel("Y")
+zlabel("Z")
+title("Ackley function")
 
 function z = ackley2D(x,y)
 e = exp(1);

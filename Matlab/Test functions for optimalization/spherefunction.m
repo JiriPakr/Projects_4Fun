@@ -1,5 +1,5 @@
 clear;clc;
-x = linspace(-1e4,1e4,100)
+x = linspace(-1e4,1e4,100);
 y = x;
 z = zeros(length(x),length(y));
 
@@ -11,8 +11,11 @@ end
 
 s = surf(x,y,z);
 s.LineStyle = 'None';
+xlabel("X")
+ylabel("Y")
+zlabel("Z")
+title("Sphere function")
 
-
-function y = sphere(x);
+function y = sphere(x)
     y = sum(x.^2);
 end
