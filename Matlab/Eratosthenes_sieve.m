@@ -1,5 +1,6 @@
 clear;clc;
 
+% calculates primes to N
 n = 3000;
 primes = [2];
 
