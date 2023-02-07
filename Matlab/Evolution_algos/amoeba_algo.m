@@ -14,7 +14,7 @@ sigma = 1/2;
 %% Plot
 for i=1:length(x)
     for j=1:length(y)
-        z(i,j) = RBfun(x(i),y(i),a,b);
+        z(i,j) = RBfun(x(i),y(j),a,b);
     end
 end
 
